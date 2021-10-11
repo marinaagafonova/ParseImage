@@ -1,4 +1,8 @@
 import argparse
+import sys
+sys.path.append(".")
+sys.path.append("/image_parser")
+from image_parser.parse_pdf import extract_images_from_pdf
 
 parser = argparse.ArgumentParser(description='Parse your source for images and detect the article')
 
@@ -13,9 +17,7 @@ if args.url is not None:
     #parse_url(args.url)
     print(args.url)
 elif args.pdf is not None:
-    #go to parse_pdf
-    #parse_pdf(args.pdf)
-    print(args.pdf)
+    extract_images_from_pdf(args.pdf)
 elif args.jpeg is not None:
     #go to parse_jpeg
     #parse_jpeg(args.jpeg)
