@@ -1,4 +1,4 @@
 import random
 
 def detect():
-    return random.choice(['diagram', 'graph', 'bar chart', 'system', 'scheme', 'formula'])
+    return random.choice(['diagram', 'graph', 'bar_chart', 'system', 'scheme', 'formula'])
