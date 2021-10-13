@@ -1,2 +1,5 @@
 saved/
 detector/__pycache__/
+detector/training/diagrams
+detector/training/graphs
+detector/training/schemas
