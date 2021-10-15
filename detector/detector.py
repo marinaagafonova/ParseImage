@@ -15,16 +15,15 @@ import shutil # to save it locally
 import time
 import numpy as np
 
-def getFileNameFromUrl(url):
+def get_file_name_from_url(url):
   firstpos=url.rindex("/")
   lastpos=len(url)
   filename=url[firstpos+1:lastpos]
   print(f"url={url} firstpos={firstpos} lastpos={lastpos} filename={filename}")
   return filename
 
-
-def downloadImage(imageUrl, destinationFolder):
-  filename = getFileNameFromUrl(imageUrl)
+def download_image(imageUrl, destinationFolder):
+  filename = get_file_name_from_url(imageUrl)
   # Open the url image, set stream to True, this will return the stream content.
   r = requests.get(imageUrl, stream = True)
 
@@ -48,15 +47,23 @@ def downloadImage(imageUrl, destinationFolder):
       print(f'Image url={imageUrl} and filename={filename} Couldn\'t be retreived. HTTP Status={r.status_code}')
 
 
-def get_images_from_dataset(dataset_path, destinationFolder):
+def get_images_from_dataset(dataset_path, destinationFolder, is_testdataset=False):
     df = pd.read_csv(dataset_path)
     os.makedirs(destinationFolder, exist_ok=True)
+    if not is_testdataset:
+        for i, row in df.iterrows():
+            print(f"Index: {i}")
+            print(f"{row['Image URL']}\n")
 
-    for i, row in df.iterrows():
-        print(f"Index: {i}")
-        print(f"{row['Image URL']}\n")
-
-        downloadImage(row["Image URL"], destinationFolder)
+            download_image(row["Image URL"], destinationFolder)
+    else:
+        for i, row in df.iterrows():
+            labelName = row["Label"]
+            print(f"Index: {i}")
+            print(f"{row['Image URL']}\n")
+            destinationFolderLabel= os.path.join(destinationFolder, labelName)
+            os.makedirs(destinationFolderLabel, exist_ok=True)
+            download_image(row["Image URL"], destinationFolderLabel)
 
 def map_to_numeric_values():
     batch_size = 32
@@ -132,5 +139,5 @@ def detect():
 
 get_images_from_dataset('datasets/article_dataset.csv', "content/dataset/article")
 get_images_from_dataset('datasets/other_dataset.csv', "content/dataset/others")
-get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset")
+get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset", is_testdataset=True)
 dataset_proccessing()
