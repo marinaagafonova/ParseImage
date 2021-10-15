@@ -1,4 +1,6 @@
 saved/
 detector/__pycache__/
 detector/science
-detector/resized
+detector/notscience
+detector/dataset
+detector/test_dataset
