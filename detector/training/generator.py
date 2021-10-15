@@ -10,16 +10,18 @@ import string
 import itertools
 import networkx as nx
 import numpy.random as rnd
+import sys
+sys.path.append(".")
 
 #Количество графиков/диаграмм, которое нужно сохранить для обучения.
-count = 30
+count = 10
 #Максимум и минимум точек на графиках
 high = 30
 low = 2
+path = '../science'
+os.makedirs(path, exist_ok=True)
 
 def generate_graphs():
-    path = 'graphs'
-    os.makedirs(path, exist_ok=True)
     for i in range(count):
         #случайный выбор, будет график убывающим, возрастающим или случайным.
         howsort = random.choice(['asc', 'desc', 'none'])
@@ -45,8 +47,6 @@ def generate_graphs():
             plt.close()
 
 def generate_diagram():
-    path = 'diagrams'
-    os.makedirs(path, exist_ok=True)
     for i in range(count):
         #случайный выбор типа диаграммы
         dtype = random.choice(['hist', 'bar', 'barh', 'circle'])
@@ -78,8 +78,6 @@ def generate_diagram():
         plt.close()
 
 def generate_schema():
-        path = 'schemas'
-        os.makedirs(path, exist_ok=True)
         #в качестве схемы используется граф Эрдьёша-Реньи на основании количества узлов и вероятности их попарного соединения.
         for i in range(count):
             schema = nx.Graph()
