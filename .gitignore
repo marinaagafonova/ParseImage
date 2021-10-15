@@ -2,3 +2,4 @@ saved/
 detector/__pycache__/
 detector/science
 detector/resized
+detector/content
