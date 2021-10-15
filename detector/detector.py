@@ -10,10 +10,11 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import pandas as pd
-import requests # to get image from the web
-import shutil # to save it locally
+import requests
+import shutil
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 
 def get_file_name_from_url(url):
   firstpos=url.rindex("/")
@@ -66,6 +67,7 @@ def get_images_from_dataset(dataset_path, destinationFolder, is_testdataset=Fals
             download_image(row["Image URL"], destinationFolderLabel)
 
 def map_to_numeric_values():
+    global train_ds, val_ds, test_ds
     batch_size = 32
     test_batch_size=37
     img_height = 300
@@ -80,7 +82,7 @@ def map_to_numeric_values():
         image_size=(img_height, img_width),
         batch_size=batch_size, label_mode='binary')
     class_names_train = train_ds.class_names
-    print("train classes " + class_names_train)
+    print("train classes " + str(class_names_train))
     val_ds = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,
         validation_split=0.2,
@@ -89,14 +91,14 @@ def map_to_numeric_values():
         image_size=(img_height, img_width),
         batch_size=batch_size,label_mode='binary')
     class_names_val = val_ds.class_names
-    print("val classes " + class_names_val)
+    print("val classes " + str(class_names_val))
     test_ds = tf.keras.preprocessing.image_dataset_from_directory(
         test_data_dir,
         seed=200,
         image_size=(img_height, img_width),
         batch_size=test_batch_size,label_mode='binary')
     class_names_test = test_ds.class_names
-    print("test classes " + class_names_test)
+    print("test classes " + str(class_names_test))
 
 
 def resize_and_move(wo, wohin, maxsize = 90000):
@@ -137,7 +139,30 @@ def detect():
     return random.choice(['diagram', 'graph', 'bar_chart', 'system', 'scheme', 'formula'])
     
 
-get_images_from_dataset('datasets/article_dataset.csv', "content/dataset/article")
-get_images_from_dataset('datasets/other_dataset.csv', "content/dataset/others")
-get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset", is_testdataset=True)
+def visualize_data_from_training():
+    plt.figure(figsize=(10, 10))
+    for images, labels in train_ds.take(1):
+        for i in range(9):
+            ax = plt.subplot(3, 3, i + 1)
+            plt.imshow(images[i].numpy().astype("uint8"))
+            if labels[i] == 1.0:
+                title = "Article"
+            else:
+                title = "Others"
+
+            plt.title(title)
+            plt.axis("off")
+    plt.show()
+
+def parse_datasets():
+    get_images_from_dataset('datasets/article_dataset.csv', "content/dataset/article")
+    get_images_from_dataset('datasets/other_dataset.csv', "content/dataset/others")
+    get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset", is_testdataset=True)
+
+train_ds = []
+val_ds = []
+test_ds = []
+
+#parse_datasets()
 dataset_proccessing()
+visualize_data_from_training()
