@@ -17,6 +17,58 @@ import shutil # to save it locally
 import time
 import numpy as np
 
+def get_file_name_from_url(url):
+  firstpos=url.rindex("/")
+  lastpos=len(url)
+  filename=url[firstpos+1:lastpos]
+  print(f"url={url} firstpos={firstpos} lastpos={lastpos} filename={filename}")
+  return filename
+
+
+def download_image(imageUrl, destinationFolder):
+  filename = get_file_name_from_url(imageUrl)
+  # Open the url image, set stream to True, this will return the stream content.
+  r = requests.get(imageUrl, stream = True)
+
+  # Check if the image was retrieved successfully
+  if r.status_code == 200:
+      # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
+      r.raw.decode_content = True
+      
+      # Open a local file with wb ( write binary ) permission.
+      filePath = os.path.join(destinationFolder, filename)
+      if not os.path.exists(filePath):
+        with open(filePath,'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+        print('Image sucessfully Downloaded: ',filename)
+        print("Sleeping for 1 seconds before attempting next download")
+        time.sleep(1)
+      else:
+        print(f'Skipping image {filename} as it is already Downloaded: ')
+
+  else:
+      print(f'Image url={imageUrl} and filename={filename} Couldn\'t be retreived. HTTP Status={r.status_code}')
+
+
+def get_images_from_dataset(dataset_path, destinationFolder, is_testdataset=False):
+    df = pd.read_csv(dataset_path)
+    os.makedirs(destinationFolder, exist_ok=True)
+    if not is_testdataset:
+        for i, row in df.iterrows():
+            print(f"Index: {i}")
+            print(f"{row['Image URL']}\n")
+
+            download_image(row["Image URL"], destinationFolder)
+    else:
+        for i, row in df.iterrows():
+            labelName = row["Label"]
+            print(f"Index: {i}")
+            print(f"{row['Image URL']}\n")
+            destinationFolderLabel= os.path.join(destinationFolder, labelName)
+            os.makedirs(destinationFolderLabel, exist_ok=True)
+            download_image(row["Image URL"], destinationFolderLabel)
+
+
 def map_to_numeric_values():
     batch_size = 32
     test_batch_size=37
@@ -46,52 +98,10 @@ def map_to_numeric_values():
     class_names = train_ds.class_names
     print(class_names)
 
-def getFileNameFromUrl(url):
-  firstpos=url.rindex("/")
-  lastpos=len(url)
-  filename=url[firstpos+1:lastpos]
-  print(f"url={url} firstpos={firstpos} lastpos={lastpos} filename={filename}")
-  return filename
-
-
-def downloadImage(imageUrl, destinationFolder):
-  filename = getFileNameFromUrl(imageUrl)
-  # Open the url image, set stream to True, this will return the stream content.
-  r = requests.get(imageUrl, stream = True)
-
-  # Check if the image was retrieved successfully
-  if r.status_code == 200:
-      # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
-      r.raw.decode_content = True
-      
-      # Open a local file with wb ( write binary ) permission.
-      filePath = os.path.join(destinationFolder, filename)
-      if not os.path.exists(filePath):
-        with open(filePath,'wb') as f:
-            shutil.copyfileobj(r.raw, f)
-        print('Image sucessfully Downloaded: ',filename)
-        print("Sleeping for 1 seconds before attempting next download")
-        time.sleep(1)
-      else:
-        print(f'Skipping image {filename} as it is already Downloaded: ')
-
-  else:
-      print(f'Image url={imageUrl} and filename={filename} Couldn\'t be retreived. HTTP Status={r.status_code}')
-
-
-def get_images_from_dataset(dataset_path, destinationFolder):
-    df = pd.read_csv(dataset_path)
-    os.makedirs(destinationFolder, exist_ok=True)
-
-    for i, row in df.iterrows():
-        print(f"Index: {i}")
-        print(f"{row['Image URL']}\n")
-
-        downloadImage(row["Image URL"], destinationFolder)
 
 #пересохраняет изображение и, если размер изображения слишком большой, уменьшает его.
 def resize_images():
-    count = 0;
+    count = 0
     #обработка научных изображений
     os.makedirs('resized', exist_ok=True)
     count = 0
@@ -129,5 +139,5 @@ def detect():
 
 get_images_from_dataset('datasets/article_dataset.csv', "content/dataset/article")
 get_images_from_dataset('datasets/other_dataset.csv', "content/dataset/others")
-get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset")
+get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset", is_testdataset=True)
 dataset_proccessing()
