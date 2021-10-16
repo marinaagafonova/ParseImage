@@ -66,6 +66,13 @@ def get_images_from_dataset(dataset_path, destinationFolder, is_testdataset=Fals
             os.makedirs(destinationFolderLabel, exist_ok=True)
             download_image(row["Image URL"], destinationFolderLabel)
 
+
+def parse_datasets():
+    get_images_from_dataset('datasets/article_dataset.csv', "content/dataset/article")
+    get_images_from_dataset('datasets/other_dataset.csv', "content/dataset/others")
+    get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset", is_testdataset=True)
+
+
 def resize_and_move(wo, wohin, maxsize = 90000):
     count_resized = 0
     count_moved = 0
@@ -197,6 +204,7 @@ def predict_with_test_dataset(model):
 
 # создание и компиляция модели
 def create_model():
+    global model
     img_height = 300
     img_width = 300
     model = Sequential([
@@ -214,17 +222,23 @@ def create_model():
     model.compile(optimizer='adam', 
                 loss=keras.losses.BinaryCrossentropy(from_logits=True), 
                 metrics=[keras.metrics.BinaryAccuracy()])
-    return model
+    print('model summary:')
+    model.summary()
 
 
-def parse_datasets():
-    get_images_from_dataset('datasets/article_dataset.csv', "content/dataset/article")
-    get_images_from_dataset('datasets/other_dataset.csv', "content/dataset/others")
-    get_images_from_dataset('datasets/test_dataset.csv', "content/test_dataset", is_testdataset=True)
+def train_model():
+    epochs=10
+    history = model.fit(
+        train_ds,
+        validation_data=val_ds,
+        epochs=epochs
+        )
+    
 
 train_ds = []
 val_ds = []
 test_ds = []
+model = []
 
 #parse_datasets()
 dataset_proccessing()
@@ -232,9 +246,10 @@ dataset_proccessing()
 prefetch()
 standardize_data()
 data_augmentation()
-ml_model = create_model()
-print('model summary:')
-ml_model.summary()
+create_model()
+train_model()
+
+
 # create_model()
 # model_train()
 # keras.backend.clear_session()
