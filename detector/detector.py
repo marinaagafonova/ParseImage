@@ -233,6 +233,34 @@ def train_model():
         validation_data=val_ds,
         epochs=epochs
         )
+    return history
+
+
+def visualize_training_results(history):
+    epochs=10
+    print(history.history)
+    acc = history.history['binary_accuracy']
+    val_acc = history.history['val_binary_accuracy']
+    print('/n val_acc:')
+    print(val_acc)
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    epochs_range = range(epochs)
+
+    plt.figure(figsize=(8, 8))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, acc, label='Training Accuracy')
+    plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+    plt.legend(loc='lower right')
+    plt.title('Training and Validation Accuracy')
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, loss, label='Training Loss')
+    plt.plot(epochs_range, val_loss, label='Validation Loss')
+    plt.legend(loc='upper right')
+    plt.title('Training and Validation Loss')
+    plt.show()
     
 
 train_ds = []
@@ -247,7 +275,7 @@ prefetch()
 standardize_data()
 data_augmentation()
 create_model()
-train_model()
+visualize_training_results(train_model())
 
 
 # create_model()
