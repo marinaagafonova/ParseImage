@@ -66,6 +66,100 @@ def get_images_from_dataset(dataset_path, destinationFolder, is_testdataset=Fals
             os.makedirs(destinationFolderLabel, exist_ok=True)
             download_image(row["Image URL"], destinationFolderLabel)
 
+def prefetch():
+    global train_ds
+    global val_ds
+    memory = tf.data.AUTOTUNE
+    train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=memory)
+    val_ds = val_ds.cache().prefetch(buffer_size=memory)
+
+def data_augmentation():
+    global data_augmentation
+    data_augmentation = tf.keras.Sequential([
+        tf.keras.layers.experimental.preprocessing.RandomFlip('horizontal'),
+        tf.keras.layers.experimental.preprocessing.RandomRotation(0.2),
+    ])
+
+def standardize_data():
+    global train_ds
+    normalization_layer = layers.experimental.preprocessing.Rescaling(1./255)
+    train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
+    
+# def training_view(history, epochs):
+    # print(history.history)
+    # acc = history.history['binary_accuracy']
+    # val_acc = history.history['val_binary_accuracy']
+    # # acc = history.history['accuracy']
+    # # val_acc = history.history['val_accuracy']
+
+    # loss = history.history['loss']
+    # val_loss = history.history['val_loss']
+
+    # epochs_range = range(epochs)
+
+    # plt.figure(figsize=(8, 8))
+    # plt.subplot(1, 2, 1)
+    # plt.plot(epochs_range, acc, label='Training Accuracy')
+    # plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+    # plt.legend(loc='lower right')
+    # plt.title('Training and Validation Accuracy')
+
+    # plt.subplot(1, 2, 2)
+    # plt.plot(epochs_range, loss, label='Training Loss')
+    # plt.plot(epochs_range, val_loss, label='Validation Loss')
+    # plt.legend(loc='upper right')
+    # plt.title('Training and Validation Loss')
+    # plt.show()
+
+# def create_model():
+    # global model
+    # img_height = 300
+    # img_width = 300
+    # model = Sequential([
+        # layers.experimental.preprocessing.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
+        # layers.Conv2D(16, 3, padding='same', activation='relu'),
+        # layers.MaxPooling2D(),
+        # layers.Conv2D(32, 3, padding='same', activation='relu'),
+        # layers.MaxPooling2D(),
+        # layers.Conv2D(64, 3, padding='same', activation='relu'),
+        # layers.MaxPooling2D(),
+        # layers.Flatten(),
+        # layers.Dense(128, activation='relu'),
+        # layers.Dense(1, activation='sigmoid')
+# ])
+    # model.compile(optimizer='adam', loss=keras.losses.BinaryCrossentropy(from_logits=True), metrics=[keras.metrics.BinaryAccuracy()])
+
+# def model_train():
+    # epochs=10
+    # history = model.fit(
+        # train_ds,
+        # validation_data=val_ds,
+        # epochs=epochs
+# )
+    # training_view(history, epochs)
+
+def predict_with_test_dataset(model):
+    labelMappings={"0":"Others", "1":"Article", 0.0:"Others", 1.0:"Article"}
+    image_batch, label_batch = test_ds.as_numpy_iterator().next()
+    predictions = model.predict_on_batch(image_batch).flatten()
+    predictions = tf.where(predictions < 0.5, 0, 1)
+    correctPredictions=0
+    plt.figure(figsize=(20, 20))
+    print(f"number predictions={len(predictions)}")
+    for i in range(len(predictions)):
+        ax = plt.subplot(8, 5, i +1)
+        plt.imshow(image_batch[i].astype("uint8"))
+        prediction = class_names[predictions[i]]
+        predictionLabel = labelMappings[prediction]
+        gtLabel = labelMappings[label_batch[i][0]]
+    if gtLabel == predictionLabel:
+        correctPredictions += 1
+    plt.title(f"P={predictionLabel} GT={gtLabel}")
+    plt.axis("off")
+    accuracy = correctPredictions/len(predictions)
+    print(f"Accuracy:{accuracy}")
+
+
 def map_to_numeric_values():
     global train_ds, val_ds, test_ds
     batch_size = 32
@@ -163,6 +257,12 @@ train_ds = []
 val_ds = []
 test_ds = []
 
-#parse_datasets()
+parse_datasets()
 dataset_proccessing()
-visualize_data_from_training()
+#visualize_data_from_training()
+prefetch()
+standardize_data()
+data_augmentation()
+# create_model()
+# model_train()
+# keras.backend.clear_session()
